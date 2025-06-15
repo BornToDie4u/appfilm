@@ -74,6 +74,10 @@ async function handleloginrequest(req,res) {
   }
 
   const token = user.generateAuthtoken();
+  
+  const otp = generateOTP();
+  await sendEmail(email, otp);
+
 
   res.cookie('token' , token)
   res.json({token : token,user : user});

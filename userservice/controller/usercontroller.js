@@ -1,4 +1,5 @@
 const {usermodle} = require('../models/usermodle');
+const {otpModle} = require("../models/otpHandler")
 const nodemailer = require("nodemailer")
 const jwt = require("jsonwebtoken")
 
@@ -27,28 +28,30 @@ function generateOTP() {
 
 async function handleregisterrequest (req,res){
 
-    const {name , email , password} = req.body;
+  console.log("Register API hit", req.body)
+
+    const {name , email , password , phonenumber} = req.body;
 
     const hashedpassword = await usermodle.hashpassword(password);
 
      const incaptain_alredy_exist = await usermodle.findOne({email});
 
     if (incaptain_alredy_exist) {
-        return res.status(200).json({msg : 'captain alredy exist'})
+        return res.status(409).json({msg : 'captain alredy exist'})
     }
 
     const user = await usermodle.create({
         name : name,
         email : email,
         password : hashedpassword,
+       
     })
 
     console.log(user);
 
 
-    const otp = generateOTP();
 
-    await sendEmail(email, otp);
+    
     
     res.status(201).json({user : user, otp:"otp has been send"});
 
@@ -74,9 +77,17 @@ async function handleloginrequest(req,res) {
   }
 
   const token = user.generateAuthtoken();
+  const otp = generateOTP();
+  await sendEmail(email, otp);
+
+  const otpSys = await otpModle.create({
+    email : email,
+    otp : otp,
+  })
+  console.log(otpSys);
 
   res.cookie('token' , token)
-  res.json({token : token,user : user});
+  res.status(201).json({token : token,user : user});
   
 }
 
@@ -104,7 +115,21 @@ async function handleprofileRequest(req,res) {
 }
 
 
+async function VerifyEmail(req,res) {
+
+  const {email , otp} = req.body;
+
+  const checkemail = await otpModle.findOne({email : email , otp : otp})
+  if(!checkemail){
+    return res.status(400).json({error :"OTP didnt matched"})
+  }
+  console.log("OTP matched successfully", checkemail);
+  res.status(200).json({success : "otp found" , creds : checkemail})
+
+}
 
 
 
-module.exports = {handleregisterrequest,handleloginrequest,handlelogoutRequest,handleprofileRequest}
+
+
+module.exports = {handleregisterrequest,handleloginrequest,handlelogoutRequest,handleprofileRequest,VerifyEmail}

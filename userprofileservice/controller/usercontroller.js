@@ -22,7 +22,7 @@ const { profile } = require("console");
 
 async function setprofile(req, res) {
   try {
-    const { mainProf, imageurl, about, Details, Skills, RecentProjects,ArchiveImages } =
+    const { mainProf, about, Details, Skills, RecentProjects } =
       req.body;
 
     const userid = req.user._id;
@@ -37,12 +37,12 @@ async function setprofile(req, res) {
     const createprofile = await usermodle.create({
       userid: userid,
       mainProf: mainProf,
-      imageurl: imageurl,
+      
       about: about,
       Details: Details,
       Skills: Skills,
       RecentProjects: RecentProjects,
-      ArchiveImages : ArchiveImages,
+      
     });
 
     res.status(200).json({
@@ -100,17 +100,16 @@ async function updateProfile(req,res) {
 }
 
 
-async function uploadProfilePicture(req,res) {
-
- try {
+async function uploadProfilePicture(req, res) {
+  try {
     const userid = req.user._id;
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // URL your front-end can reach (served statically below)
-    const imageurl = path.posix.join("/uploads", userid.toString(), req.file.filename);
+    // Full URL path for front-end use
+    const imageurl = `${req.protocol}://${req.get("host")}/uploads/${userid}/${req.file.filename}`;
 
     const updatedProfile = await usermodle.findOneAndUpdate(
       { userid },
@@ -131,29 +130,27 @@ async function uploadProfilePicture(req,res) {
     console.error(err);
     res.status(500).json({ error: "Server error while uploading profile picture" });
   }
-
-
-  
 }
 
-async function uploadArchiveImages(req,res) {
+// Archive Image Upload
+async function uploadArchiveImages(req, res) {
   try {
     const userId = req.user._id;
-    console.log(userId)
 
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: "No files uploaded" });
     }
 
     const archiveImages = req.files.map(file => {
-      const imageUrl = path.posix.join("/ArchiveImages", userId.toString(), file.filename);
+      const imageUrl = `${req.protocol}://${req.get("host")}/ArchiveImages/${userId}/${file.filename}`;
       return { imgurls: imageUrl };
     });
 
-    const user = await usermodle.findOne({ userid : userId});
+    const user = await usermodle.findOne({ userid: userId });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
     user.ArchiveImages.push(...archiveImages);
     await user.save();
 
