@@ -4,7 +4,7 @@ function connectdb() {
     // mongoose.connect("mongodb://127.0.0.1:27017/filmyfi-userPhone-service").then(()=>{
     //     console.log('monog connected');
     // }) 
-    mongoose.connect(MONGO_URL).then(()=>{
+    mongoose.connect(process.env.MONGO_URL).then(()=>{
         console.log('monog connected');
     })     
 }
