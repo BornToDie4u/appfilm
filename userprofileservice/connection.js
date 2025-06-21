@@ -5,7 +5,10 @@ function connectdb() {
     //     console.log('monog connected');
     // })     
 
-    mongoose.connect("mongodb://127.0.0.1:27017/filmyfi-userProfile-service").then(()=>{
+    mongoose.connect(MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(()=>{
         console.log('monog connected');
     })     
 
