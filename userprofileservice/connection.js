@@ -5,7 +5,7 @@ function connectdb() {
     //     console.log('monog connected');
     // })     
 
-    mongoose.connect(MONGO_URL, {
+    mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(()=>{
