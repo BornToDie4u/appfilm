@@ -3,11 +3,12 @@ const connectdb = require('./connection')
 const cookieparser = require('cookie-parser')
 const express = require('express');
 const path = require("path");
-
+const dotenv = require('dotenv')
 connectdb();
 
 const app = express();
 const cors = require('cors');
+dotenv.config();
 
 
 
