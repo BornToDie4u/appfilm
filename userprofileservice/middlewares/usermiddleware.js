@@ -25,9 +25,9 @@ async function user_auth(req, res, next) {
     // Try fallback if user is not found
     if (!user) {
       try {
-        const response = await axios.get("https://appfilm-1.onrender.com/profile", {
+        const response = await axios.get("https://appfilm.onrender.com/profile", {
           headers: { Cookie: `token=${token}` },
-        });//"http://localhost:4001/profile"
+        });//"http://localhost:4008/profile"
         user = response.data.user;
       } catch (err) {
         console.log("Service 2 also failed.");
