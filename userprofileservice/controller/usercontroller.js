@@ -108,8 +108,9 @@ async function uploadProfilePicture(req, res) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Full URL path for front-end use
-    const imageurl = `${req.protocol}://${req.get("host")}/uploads/${userid}/${req.file.filename}`;
+    const protocol = getProtocol(req);
+    const imageurl = `${protocol}://${req.get("host")}/uploads/${userid}/${req.file.filename}`;
+
 
     const updatedProfile = await usermodle.findOneAndUpdate(
       { userid },
@@ -141,8 +142,9 @@ async function uploadArchiveImages(req, res) {
       return res.status(400).json({ error: "No files uploaded" });
     }
 
+    const protocol = getProtocol(req);
     const archiveImages = req.files.map(file => {
-      const imageUrl = `${req.protocol}://${req.get("host")}/ArchiveImages/${userId}/${file.filename}`;
+      const imageUrl = `${protocol}://${req.get("host")}/ArchiveImages/${userId}/${file.filename}`;
       return { imgurls: imageUrl };
     });
 
@@ -181,5 +183,62 @@ async function get_profesionalProfile(req,res) {
 }
 
 
+const uploadCLoudinaryProfilePicture = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-module.exports = { setprofile, getprofile ,updateProfile,uploadProfilePicture,uploadArchiveImages,get_profesionalProfile};
+    const imageurl = req.file.path; // cloudinary provides this
+    const updatedProfile = await usermodle.findOneAndUpdate(
+      { userid: userId },
+      { imageurl },
+      { new: true }
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ error: "Profile not found – create it first." });
+    }
+
+    res.status(200).json({
+      message: "Profile picture uploaded successfully",
+      imageurl,
+      profile: updatedProfile,
+    });
+  } catch (err) {
+    console.error("Upload profile error:", err);
+    res.status(500).json({ error: "Server error while uploading profile picture" });
+  }
+};
+
+const uploadCloudinaryArchiveImages = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "No files uploaded" });
+    }
+
+    const archiveImages = req.files.map(file => ({
+      imgurls: file.path, // ✅ Cloudinary URL
+    }));
+
+    const user = await usermodle.findOne({ userid: userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.ArchiveImages.push(...archiveImages);
+    await user.save();
+
+    res.status(200).json({ message: "Images uploaded successfully", archiveImages });
+  } catch (err) {
+    console.error("Upload archive error:", err);
+    res.status(500).json({ error: "Server error during archive image upload" });
+  }
+};
+
+
+
+module.exports = { setprofile, getprofile ,updateProfile,uploadProfilePicture,uploadArchiveImages,get_profesionalProfile,uploadCLoudinaryProfilePicture,uploadCloudinaryArchiveImages};
